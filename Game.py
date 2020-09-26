@@ -36,6 +36,12 @@ class Ship(pymunk.Poly):
             self.laser_list.append(Laser(self.body.position, self.body.angle))
             space.add(self.laser_list[len(self.laser_list) - 1])
             space.add(self.laser_list[len(self.laser_list) - 1].body)
+            self.laser_list.append(Laser(self.body.position, self.body.angle + math.pi/20))
+            space.add(self.laser_list[len(self.laser_list) - 1])
+            space.add(self.laser_list[len(self.laser_list) - 1].body)
+            self.laser_list.append(Laser(self.body.position, self.body.angle - math.pi/20))
+            space.add(self.laser_list[len(self.laser_list) - 1])
+            space.add(self.laser_list[len(self.laser_list) - 1].body)
 
 player = Ship()
 
