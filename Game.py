@@ -114,8 +114,18 @@ def refresh(time):
                 space.remove(i)
                 space.remove(i.body)
                 player.laser_list.remove(i)
-    # if len(enemy_list) > 0:
-    #     enemy_list[0].shoot()
+    if dead == False and len(enemy_list) > 0:
+        for i in enemy_list:
+            body_x, body_y = i.body.position
+            x, y = player.body.position
+            i.body.angle = 0.0
+            i.body.angle = i.body.angle + math.atan2(body_y - y, body_x - x) - (math.pi)
+            distance = math.sqrt((x - body_x) ** 2 + (y - body_y) ** 2)
+            if distance >= 200:
+                i.body.velocity = Vec2d(math.cos(i.body.angle), math.sin(i.body.angle)) * 450
+            else:
+                i.body.velocity = 0, 0
+
     if dead == False:
         for enemy in enemy_list:
             for enemy_laser in enemy.laser_list:
