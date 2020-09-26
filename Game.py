@@ -95,7 +95,7 @@ def on_draw():
 
 def refresh(time):
     global dead
-    if is_held_down == True:
+    if is_held_down == True and dead == False:
         player.shoot()
     if dead == False:
         for i in player.laser_list:
@@ -114,8 +114,10 @@ def refresh(time):
                 space.remove(i)
                 space.remove(i.body)
                 player.laser_list.remove(i)
+
     if dead == False and len(enemy_list) > 0:
         for i in enemy_list:
+            i.shoot()
             body_x, body_y = i.body.position
             x, y = player.body.position
             i.body.angle = 0.0
