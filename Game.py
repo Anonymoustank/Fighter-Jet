@@ -5,6 +5,7 @@ from pymunk.pyglet_util import DrawOptions
 from pyglet.window import key, mouse
 import math
 import time
+import random
 RED = (220,20,30)
 GREEN = (0,205,0)
 options = DrawOptions()
@@ -23,7 +24,7 @@ class Laser(pymunk.Segment):
         self.damage = 25
 
 class Ship(pymunk.Poly):
-    def __init__(self, color = GREEN):
+    def __init__(self, color = GREEN, laser_type = "default"):
         self.vertices = ((-50, 25), (0, 0), (-50, -25))
         super().__init__(None, (self.vertices))
         self.triangle_moment = pymunk.moment_for_poly(1, self.get_vertices())
@@ -34,23 +35,32 @@ class Ship(pymunk.Poly):
         self.sensor = True
         self.color = color
         self.health = 100
+        self.laser_type = laser_type
     def shoot(self):
-        if abs(self.cooldown - time.perf_counter()) >= (1/4):
-            self.cooldown = time.perf_counter()
-            self.laser_list.append(Laser(self.body.position, self.body.angle))
-            space.add(self.laser_list[len(self.laser_list) - 1])
-            space.add(self.laser_list[len(self.laser_list) - 1].body)
-            self.laser_list.append(Laser(self.body.position, self.body.angle + math.pi/20))
-            space.add(self.laser_list[len(self.laser_list) - 1])
-            space.add(self.laser_list[len(self.laser_list) - 1].body)
-            self.laser_list.append(Laser(self.body.position, self.body.angle - math.pi/20))
-            space.add(self.laser_list[len(self.laser_list) - 1])
-            space.add(self.laser_list[len(self.laser_list) - 1].body)
+        if self.laser_type == "three-shooter":
+            if abs(self.cooldown - time.perf_counter()) >= (1/3):
+                self.cooldown = time.perf_counter()
+                self.laser_list.append(Laser(self.body.position, self.body.angle))
+                space.add(self.laser_list[len(self.laser_list) - 1])
+                space.add(self.laser_list[len(self.laser_list) - 1].body)
+                self.laser_list.append(Laser(self.body.position, self.body.angle + math.pi/20))
+                space.add(self.laser_list[len(self.laser_list) - 1])
+                space.add(self.laser_list[len(self.laser_list) - 1].body)
+                self.laser_list.append(Laser(self.body.position, self.body.angle - math.pi/20))
+                space.add(self.laser_list[len(self.laser_list) - 1])
+                space.add(self.laser_list[len(self.laser_list) - 1].body)
+        elif self.laser_type == "default":
+            if abs(self.cooldown - time.perf_counter()) >= (1/6):
+                self.cooldown = time.perf_counter()
+                variance = random.uniform(-1 * math.pi/25, math.pi/25)
+                self.laser_list.append(Laser(self.body.position, self.body.angle + variance))
+                space.add(self.laser_list[len(self.laser_list) - 1])
+                space.add(self.laser_list[len(self.laser_list) - 1].body)
 
-player = Ship()
+player = Ship(GREEN, "three-shooter")
 enemy_list = []
 for i in range(1):
-    enemy_list.append(Ship(RED))
+    enemy_list.append(Ship(RED, "default"))
     space.add(enemy_list[len(enemy_list) - 1])
     space.add(enemy_list[len(enemy_list) - 1].body)
     enemy_list[len(enemy_list) - 1].body.position = WIDTH // 2, HEIGHT // 2
@@ -87,7 +97,6 @@ def refresh(time):
     global dead
     if is_held_down == True:
         player.shoot()
-    
     if dead == False:
         for i in player.laser_list:
             for enemy in enemy_list:
@@ -105,7 +114,8 @@ def refresh(time):
                 space.remove(i)
                 space.remove(i.body)
                 player.laser_list.remove(i)
-
+    # if len(enemy_list) > 0:
+    #     enemy_list[0].shoot()
     if dead == False:
         for enemy in enemy_list:
             for enemy_laser in enemy.laser_list:
