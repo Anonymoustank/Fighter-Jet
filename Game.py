@@ -50,7 +50,7 @@ class Ship(pymunk.Poly):
                 space.add(self.laser_list[len(self.laser_list) - 1])
                 space.add(self.laser_list[len(self.laser_list) - 1].body)
         elif self.laser_type == "default":
-            if abs(self.cooldown - time.perf_counter()) >= (1/6):
+            if abs(self.cooldown - time.perf_counter()) >= (1/3):
                 self.cooldown = time.perf_counter()
                 variance = random.uniform(-1 * math.pi/25, math.pi/25)
                 self.laser_list.append(Laser(self.body.position, self.body.angle + variance))
@@ -120,11 +120,34 @@ def refresh(time):
             i.shoot()
             body_x, body_y = i.body.position
             x, y = player.body.position
-            i.body.angle = 0.0
-            i.body.angle = i.body.angle + math.atan2(body_y - y, body_x - x) - (math.pi)
+            # i.body.angle = 0.0
+            # desired_angle = i.body.angle + math.atan2(body_y - y, body_x - x) - (math.pi)
+            desired_angle = math.atan2(body_y - y, body_x - x) - (math.pi)
+
+            rotation_angle = math.pi/16
+            if abs(desired_angle - i.body.angle) < rotation_angle:
+                while i.body.angle >= 2 * math.pi:
+                    i.body.angle = i.body.angle / 2 * math.pi
+                while i.body.angle <= -2 * math.pi:
+                    i.body.angle = i.body.angle / -2 * math.pi
+                i.body.angle = desired_angle
+            elif desired_angle < 0:
+                i.body.angle -= rotation_angle
+                while i.body.angle <= -2 * math.pi:
+                    i.body.angle = i.body.angle / (-2 * math.pi)
+            elif desired_angle >= 0:
+                i.body.angle += rotation_angle
+                while i.body.angle >= 2 * math.pi:
+                    i.body.angle = i.body.angle / 2 * math.pi
+            else:
+                while i.body.angle >= 2 * math.pi:
+                    i.body.angle = i.body.angle / 2 * math.pi
+                while i.body.angle <= -2 * math.pi:
+                    i.body.angle = i.body.angle / -2 * math.pi
+
             distance = math.sqrt((x - body_x) ** 2 + (y - body_y) ** 2)
             if distance >= 200:
-                i.body.velocity = Vec2d(math.cos(i.body.angle), math.sin(i.body.angle)) * 450
+                i.body.velocity = Vec2d(math.cos(i.body.angle), math.sin(i.body.angle)) * 400
             else:
                 i.body.velocity = 0, 0
 
@@ -146,7 +169,7 @@ def refresh(time):
         player.body.angle = player.body.angle + math.atan2(body_y - y, body_x - x) - (math.pi)
         distance = math.sqrt((x - body_x) ** 2 + (y - body_y) ** 2)
         if distance >= 10:
-            player.body.velocity = Vec2d(math.cos(player.body.angle), math.sin(player.body.angle)) * 500
+            player.body.velocity = Vec2d(math.cos(player.body.angle), math.sin(player.body.angle)) * 650
         else:
             player.body.velocity = 0, 0
     space.step(time)
