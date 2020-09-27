@@ -25,7 +25,7 @@ class Laser(pymunk.Segment):
         self.body.position = position
         self.body.angle = angle
         self.body.velocity = Vec2d(math.cos(self.body.angle), math.sin(self.body.angle)) * 800
-        self.damage = 25
+        self.damage = 12.5
 
 class Ship(pymunk.Poly):
     def __init__(self, color = GREEN, laser_type = "default"):
@@ -59,10 +59,11 @@ class Ship(pymunk.Poly):
                 space.add(self.laser_list[len(self.laser_list) - 1])
                 space.add(self.laser_list[len(self.laser_list) - 1].body)
         elif self.laser_type == "default":
-            if abs(self.cooldown - time.perf_counter()) >= (1/3):
+            if abs(self.cooldown - time.perf_counter()) >= (1/4):
                 self.cooldown = time.perf_counter()
                 variance = random.uniform(-1 * math.pi/25, math.pi/25)
                 self.laser_list.append(Laser(self.body.position, self.body.angle + variance))
+                self.laser_list[len(self.laser_list) - 1].damage = 25
                 space.add(self.laser_list[len(self.laser_list) - 1])
                 space.add(self.laser_list[len(self.laser_list) - 1].body)
         elif self.laser_type == "sniper":
@@ -75,10 +76,10 @@ class Ship(pymunk.Poly):
                 space.add(self.laser_list[len(self.laser_list) - 1].body)
                 
 
-player = Ship(GREEN, "sniper")
+player = Ship(GREEN, "default")
 enemy_list = []
 for i in range(1):
-    enemy_list.append(Ship(RED, "default"))
+    enemy_list.append(Ship(RED, "three-shooter"))
     space.add(enemy_list[len(enemy_list) - 1])
     space.add(enemy_list[len(enemy_list) - 1].body)
     enemy_list[len(enemy_list) - 1].body.position = WIDTH // 2, HEIGHT // 2
