@@ -10,8 +10,9 @@ RED = (220,20,30)
 GREEN = (0,205,0)
 options = DrawOptions()
 destination = 0, 0
-WIDTH, HEIGHT = 1280, 720
-window = pyglet.window.Window(WIDTH, HEIGHT, "Game", resizable = False)
+WIDTH, HEIGHT = 1920, 1080
+window = pyglet.window.Window(WIDTH, HEIGHT, "Game", resizable = True)
+window.set_fullscreen(True) 
 space = pymunk.Space()
 class Laser(pymunk.Segment):
     def __init__(self, position, angle, color = GREEN):
@@ -36,6 +37,7 @@ class Ship(pymunk.Poly):
         self.color = color
         self.health = 100
         self.laser_type = laser_type
+        self.time_since_variance = time.perf_counter() - 0.2#only for enemies
     def shoot(self):
         if self.laser_type == "three-shooter":
             if abs(self.cooldown - time.perf_counter()) >= (1/3):
@@ -93,7 +95,7 @@ def on_draw():
     window.clear()
     space.debug_draw(options)
 
-def refresh(time):
+def refresh(dt):
     global dead
     if is_held_down == True and dead == False:
         player.shoot()
@@ -122,7 +124,11 @@ def refresh(time):
             x, y = player.body.position
             # i.body.angle = 0.0
             # desired_angle = i.body.angle + math.atan2(body_y - y, body_x - x) - (math.pi)
-            desired_angle = math.atan2(body_y - y, body_x - x) - (math.pi)
+            if abs(time.perf_counter() - i.time_since_variance) >= (0.15):
+                variance_num = random.uniform(-1 * math.pi/20, math.pi/20)    
+                global desired_angle
+                desired_angle = math.atan2(body_y - y, body_x - x) - (math.pi) + variance_num
+                i.time_since_variance = time.perf_counter()
 
             rotation_angle = math.pi/16
             if abs(desired_angle - i.body.angle) < rotation_angle:
@@ -172,7 +178,7 @@ def refresh(time):
             player.body.velocity = Vec2d(math.cos(player.body.angle), math.sin(player.body.angle)) * 650
         else:
             player.body.velocity = 0, 0
-    space.step(time)
+    space.step(dt)
 
 if __name__ == "__main__":
     pyglet.clock.schedule_interval(refresh, 1.0/120.0)
