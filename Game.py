@@ -8,6 +8,7 @@ import time
 import random
 RED = (220,20,30)
 GREEN = (0,205,0)
+WHITE = (255, 255, 255)
 options = DrawOptions()
 destination = 0, 0
 WIDTH, HEIGHT = 1920, 1080
@@ -58,8 +59,17 @@ class Ship(pymunk.Poly):
                 self.laser_list.append(Laser(self.body.position, self.body.angle + variance))
                 space.add(self.laser_list[len(self.laser_list) - 1])
                 space.add(self.laser_list[len(self.laser_list) - 1].body)
+        elif self.laser_type == "sniper":
+            if abs(self.cooldown - time.perf_counter()) >= (1):
+                self.cooldown = time.perf_counter()
+                self.laser_list.append(Laser(self.body.position, self.body.angle, WHITE))
+                self.laser_list[len(self.laser_list) - 1].body.velocity = self.laser_list[len(self.laser_list) - 1].body.velocity * 2
+                self.laser_list[len(self.laser_list) - 1].damage = 50
+                space.add(self.laser_list[len(self.laser_list) - 1])
+                space.add(self.laser_list[len(self.laser_list) - 1].body)
+                
 
-player = Ship(GREEN, "three-shooter")
+player = Ship(GREEN, "sniper")
 enemy_list = []
 for i in range(1):
     enemy_list.append(Ship(RED, "default"))
@@ -69,7 +79,27 @@ for i in range(1):
 
 dead = False
 
-space.add(player, player.body)
+wall1_body = pymunk.Body(1, 100, pymunk.Body.KINEMATIC)
+wall1_body.position = WIDTH + 5, HEIGHT // 2
+right_wall = pymunk.Poly.create_box(wall1_body, size = (10, HEIGHT))
+wall1_body.elasticity, right_wall.elasticity = 0, 0
+
+wall2_body = pymunk.Body(1, 100, pymunk.Body.KINEMATIC)
+wall2_body.position = 0 - 5, HEIGHT // 2
+left_wall = pymunk.Poly.create_box(wall2_body, size = (10, HEIGHT))
+wall2_body.elasticity, left_wall.elasticity = 0, 0
+
+wall3_body = pymunk.Body(1, 100, pymunk.Body.KINEMATIC)
+wall3_body.position = WIDTH // 2, HEIGHT + 5
+top_wall = pymunk.Poly.create_box(wall3_body, size = (WIDTH, 10))
+wall3_body.elasticity, top_wall.elasticity = 0, 0
+
+wall4_body = pymunk.Body(1, 100, pymunk.Body.KINEMATIC)
+wall4_body.position = WIDTH // 2, 0 - 5
+bottom_wall = pymunk.Poly.create_box(wall4_body, size = (WIDTH, 10))
+wall4_body.elasticity, bottom_wall.elasticity = 0, 0
+
+space.add(player, player.body, wall1_body, wall2_body, wall3_body, wall4_body, right_wall, left_wall, top_wall, bottom_wall)
 space.gravity = 0, 0
 
 is_held_down = False
