@@ -38,7 +38,7 @@ class Ship(pymunk.Poly):
         self.color = color
         self.health = 100
         self.laser_type = laser_type
-        self.time_since_variance = time.perf_counter() - 0.2#only for enemies
+        self.time_since_variance = time.perf_counter() - 0.2 #only for enemies
     def shoot(self):
         if self.laser_type == "three-shooter":
             if abs(self.cooldown - time.perf_counter()) >= (1/3):
@@ -63,7 +63,7 @@ class Ship(pymunk.Poly):
             if abs(self.cooldown - time.perf_counter()) >= (1):
                 self.cooldown = time.perf_counter()
                 self.laser_list.append(Laser(self.body.position, self.body.angle, WHITE))
-                self.laser_list[len(self.laser_list) - 1].body.velocity = self.laser_list[len(self.laser_list) - 1].body.velocity * 2
+                self.laser_list[len(self.laser_list) - 1].body.velocity = self.laser_list[len(self.laser_list) - 1].body.velocity * 4
                 self.laser_list[len(self.laser_list) - 1].damage = 50
                 space.add(self.laser_list[len(self.laser_list) - 1])
                 space.add(self.laser_list[len(self.laser_list) - 1].body)
@@ -76,7 +76,7 @@ for i in range(1):
     space.add(enemy_list[len(enemy_list) - 1])
     space.add(enemy_list[len(enemy_list) - 1].body)
     enemy_list[len(enemy_list) - 1].body.position = WIDTH // 2, HEIGHT // 2
-
+started = False
 dead = False
 
 wall1_body = pymunk.Body(1, 100, pymunk.Body.KINEMATIC)
@@ -105,10 +105,18 @@ space.gravity = 0, 0
 is_held_down = False
 
 @window.event
+def on_mouse_press(x, y, button, modifiers):
+    global started
+    started = True
+
+@window.event
 def on_key_press(symbol, modifiers):
     if symbol == key.SPACE:
         global is_held_down
         is_held_down = True
+    if symbol == key.ENTER:
+        global started
+        started = True
 
 @window.event
 def on_key_release(symbol, modifiers):
@@ -122,14 +130,18 @@ def on_mouse_motion(x, y, dx, dy):
 
 @window.event
 def on_draw():
-    window.clear()
-    space.debug_draw(options)
+    if started == True:
+        window.clear()
+        space.debug_draw(options)
 
 def refresh(dt):
     global dead
-    if is_held_down == True and dead == False:
+    if started == False:
+        label = pyglet.text.Label('Press Enter/Return to Start', font_name='Times New Roman', font_size=24, x=window.width/2, y=window.height/2, anchor_x='center', anchor_y='center')
+        label.draw()
+    if is_held_down == True and dead == False and started == True:
         player.shoot()
-    if dead == False:
+    if dead == False and started == True:
         for i in player.laser_list:
             for enemy in enemy_list:
                 if len(i.shapes_collide(enemy).points) > 0:
@@ -147,7 +159,7 @@ def refresh(dt):
                 space.remove(i.body)
                 player.laser_list.remove(i)
 
-    if dead == False and len(enemy_list) > 0:
+    if dead == False and len(enemy_list) > 0 and started == True:
         for i in enemy_list:
             i.shoot()
             body_x, body_y = i.body.position
@@ -187,7 +199,7 @@ def refresh(dt):
             else:
                 i.body.velocity = 0, 0
 
-    if dead == False:
+    if dead == False and started == True:
         for enemy in enemy_list:
             for enemy_laser in enemy.laser_list:
                 if len(enemy_laser.shapes_collide(player).points) > 0:
