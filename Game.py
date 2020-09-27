@@ -15,6 +15,8 @@ WIDTH, HEIGHT = 1920, 1080
 window = pyglet.window.Window(WIDTH, HEIGHT, "Game", resizable = True)
 window.set_fullscreen(True) 
 space = pymunk.Space()
+health_bar_list = []
+
 class Laser(pymunk.Segment):
     def __init__(self, position, angle, color = GREEN):
         super().__init__(pymunk.Body(1, 100), (0, 0), (20, 0), 3)
@@ -39,6 +41,10 @@ class Ship(pymunk.Poly):
         self.health = 100
         self.laser_type = laser_type
         self.time_since_variance = time.perf_counter() - 0.2 #only for enemies
+        self.x, self.y = self.position
+        self.health_bar_length = 30
+        self.health_bar = pyglet.shapes.Rectangle(self.x - 20, self.y - 75, self.health_bar_length, 5, RED)
+        self.total_health = pyglet.shapes.Rectangle(self.x - 20, self.y - 75, self.health_bar_length * (self.health/100), 5, GREEN)
     def shoot(self):
         if self.laser_type == "three-shooter":
             if abs(self.cooldown - time.perf_counter()) >= (1/3):
@@ -133,6 +139,18 @@ def on_draw():
     if started == True:
         window.clear()
         space.debug_draw(options)
+        if dead == False:
+            player_x, player_y = player.body.position
+            player.health_bar.position = player_x - 20, player_y - 75
+            player.health_bar.draw()
+            player.total_health = pyglet.shapes.Rectangle(player_x - 20, player_y - 75, player.health_bar_length * (player.health/100), 5, GREEN)
+            player.total_health.draw()
+            for i in enemy_list:
+                i_x, i_y = i.body.position
+                i.health_bar.position = i_x - 20, i_y - 75
+                i.health_bar.draw()
+                i.total_health = pyglet.shapes.Rectangle(i_x - 20, i_y - 75, i.health_bar_length * (i.health/100), 5, GREEN)
+                i.total_health.draw()
 
 def refresh(dt):
     global dead
@@ -164,16 +182,17 @@ def refresh(dt):
             i.shoot()
             body_x, body_y = i.body.position
             x, y = player.body.position
-            # i.body.angle = 0.0
-            # desired_angle = i.body.angle + math.atan2(body_y - y, body_x - x) - (math.pi)
             if abs(time.perf_counter() - i.time_since_variance) >= (0.15):
                 variance_num = random.uniform(-1 * math.pi/20, math.pi/20)    
                 global desired_angle
                 desired_angle = math.atan2(body_y - y, body_x - x) - (math.pi) + variance_num
                 i.time_since_variance = time.perf_counter()
-
             rotation_angle = math.pi/16
-            if abs(desired_angle - i.body.angle) < rotation_angle:
+            if player.body.velocity == (0, 0):
+                i.body.angle = 0.0
+                desired_angle = i.body.angle + math.atan2(body_y - y, body_x - x) - (math.pi)
+                i.body.angle = desired_angle
+            elif abs(desired_angle - i.body.angle) < rotation_angle:
                 while i.body.angle >= 2 * math.pi:
                     i.body.angle = i.body.angle / 2 * math.pi
                 while i.body.angle <= -2 * math.pi:
