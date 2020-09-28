@@ -16,6 +16,7 @@ window = pyglet.window.Window(WIDTH, HEIGHT, "Game", resizable = True)
 window.set_fullscreen(True) 
 space = pymunk.Space()
 health_bar_list = []
+speed = 650
 
 class Laser(pymunk.Segment):
     def __init__(self, position, angle, color = GREEN):
@@ -45,6 +46,7 @@ class Ship(pymunk.Poly):
         self.health_bar_length = 30
         self.health_bar = pyglet.shapes.Rectangle(self.x - 20, self.y - 75, self.health_bar_length, 5, RED)
         self.total_health = pyglet.shapes.Rectangle(self.x - 20, self.y - 75, self.health_bar_length * (self.health/100), 5, GREEN)
+        self.blitz = False
     def shoot(self):
         if self.laser_type == "three-shooter":
             if abs(self.cooldown - time.perf_counter()) >= (1/3):
@@ -74,12 +76,16 @@ class Ship(pymunk.Poly):
                 self.laser_list[len(self.laser_list) - 1].damage = 50
                 space.add(self.laser_list[len(self.laser_list) - 1])
                 space.add(self.laser_list[len(self.laser_list) - 1].body)
+        elif self.laser_type == "blitz":
+            if abs(self.cooldown - time.perf_counter()) >= (1.5):
+                self.cooldown = time.perf_counter()
+                self.blitz = True
                 
 
-player = Ship(GREEN, "default")
+player = Ship(GREEN, "blitz")
 enemy_list = []
 for i in range(1):
-    enemy_list.append(Ship(RED, "three-shooter"))
+    enemy_list.append(Ship(RED, "sniper"))
     space.add(enemy_list[len(enemy_list) - 1])
     space.add(enemy_list[len(enemy_list) - 1].body)
     enemy_list[len(enemy_list) - 1].body.position = WIDTH // 2, HEIGHT // 2
@@ -161,6 +167,16 @@ def refresh(dt):
     if is_held_down == True and dead == False and started == True:
         player.shoot()
     if dead == False and started == True:
+        if player.blitz == True:
+            global speed
+            if abs(player.cooldown - time.perf_counter()) <= (1/4):
+                speed = 1625
+            else:
+                player.cooldown = time.perf_counter()
+                speed = 650
+                player.blitz = False
+        else:
+            speed = 650
         for i in player.laser_list:
             for enemy in enemy_list:
                 if len(i.shapes_collide(enemy).points) > 0:
@@ -180,7 +196,7 @@ def refresh(dt):
 
     if dead == False and len(enemy_list) > 0 and started == True:
         for i in enemy_list:
-            i.shoot()
+            # i.shoot()
             body_x, body_y = i.body.position
             x, y = player.body.position
             if abs(time.perf_counter() - i.time_since_variance) >= (0.15):
@@ -231,13 +247,26 @@ def refresh(dt):
                     space.remove(enemy_laser)
                     space.remove(enemy_laser.body)
                     enemy.laser_list.remove(enemy_laser)
-        body_x, body_y = player.body.position
-        x, y = destination
-        player.body.angle = 0.0
-        player.body.angle = player.body.angle + math.atan2(body_y - y, body_x - x) - (math.pi)
-        distance = math.sqrt((x - body_x) ** 2 + (y - body_y) ** 2)
-        if distance >= 10:
-            player.body.velocity = Vec2d(math.cos(player.body.angle), math.sin(player.body.angle)) * 650
+        if player.blitz == False:
+            body_x, body_y = player.body.position
+            x, y = destination
+            player.body.angle = 0.0
+            player.body.angle = player.body.angle + math.atan2(body_y - y, body_x - x) - (math.pi)
+            distance = math.sqrt((x - body_x) ** 2 + (y - body_y) ** 2)
+        if distance >= 10 or player.blitz == True:
+            if player.blitz == True:
+                global continue_forward
+                continue_forward = True
+                for i in [right_wall, left_wall, top_wall, bottom_wall]:
+                    if len(i.shapes_collide(player).points) != 0:
+                        continue_forward = False
+                if continue_forward == True:
+                    player.body.velocity = Vec2d(math.cos(player.body.angle), math.sin(player.body.angle)) * speed
+                else:
+                    player.body.velocity = 0, 0
+                    player.blitz = False
+            else:
+                player.body.velocity = Vec2d(math.cos(player.body.angle), math.sin(player.body.angle)) * speed
         else:
             player.body.velocity = 0, 0
     space.step(dt)
