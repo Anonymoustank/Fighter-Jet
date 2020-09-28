@@ -82,10 +82,10 @@ class Ship(pymunk.Poly):
                 self.blitz = True
                 
 
-player = Ship(GREEN, "blitz")
+player = Ship(GREEN, "default")
 enemy_list = []
 for i in range(1):
-    enemy_list.append(Ship(RED, "sniper"))
+    enemy_list.append(Ship(RED, "default"))
     space.add(enemy_list[len(enemy_list) - 1])
     space.add(enemy_list[len(enemy_list) - 1].body)
     enemy_list[len(enemy_list) - 1].body.position = WIDTH // 2, HEIGHT // 2
@@ -143,8 +143,8 @@ def on_mouse_motion(x, y, dx, dy):
 
 @window.event
 def on_draw():
-    if started == True:
-        window.clear()
+    window.clear()
+    if started == True and dead == False:
         space.debug_draw(options)
         if dead == False:
             player_x, player_y = player.body.position
@@ -158,12 +158,15 @@ def on_draw():
                 i.health_bar.draw()
                 i.total_health = pyglet.shapes.Rectangle(i_x - 20, i_y - 75, i.health_bar_length * (i.health/100), 5, GREEN)
                 i.total_health.draw()
+    elif started == False:
+        label = pyglet.text.Label('Press Enter/Return to Start', font_name='Comic Sans', font_size=24, x=window.width/2, y=window.height/2, anchor_x='center', anchor_y='center')
+        label.draw()
+    elif dead == True:
+        death_label = pyglet.text.Label('Game Over', font_name='Comic Sans', font_size=24, x=window.width/2, y=window.height/2, anchor_x='center', anchor_y='center')
+        death_label.draw()
 
 def refresh(dt):
     global dead
-    if started == False:
-        label = pyglet.text.Label('Press Enter/Return to Start', font_name='Times New Roman', font_size=24, x=window.width/2, y=window.height/2, anchor_x='center', anchor_y='center')
-        label.draw()
     if is_held_down == True and dead == False and started == True:
         player.shoot()
     if dead == False and started == True:
@@ -196,7 +199,7 @@ def refresh(dt):
 
     if dead == False and len(enemy_list) > 0 and started == True:
         for i in enemy_list:
-            # i.shoot()
+            i.shoot()
             body_x, body_y = i.body.position
             x, y = player.body.position
             if abs(time.perf_counter() - i.time_since_variance) >= (0.15):
