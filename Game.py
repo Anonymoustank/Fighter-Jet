@@ -82,10 +82,10 @@ class Ship(pymunk.Poly):
                 self.blitz = True
                 
 
-player = Ship(GREEN, "blitz")
+player = Ship(GREEN, "default")
 enemy_list = []
 for i in range(1):
-    enemy_list.append(Ship(RED, "default"))
+    enemy_list.append(Ship(RED, "blitz"))
     space.add(enemy_list[len(enemy_list) - 1])
     space.add(enemy_list[len(enemy_list) - 1].body)
     enemy_list[len(enemy_list) - 1].body.position = WIDTH // 2, HEIGHT // 2
@@ -116,6 +116,7 @@ space.add(player, player.body, wall1_body, wall2_body, wall3_body, wall4_body, r
 space.gravity = 0, 0
 
 is_held_down = False
+enemy_speed = 400
 
 @window.event
 def on_mouse_press(x, y, button, modifiers):
@@ -180,6 +181,15 @@ def refresh(dt):
                 player.blitz = False
         else:
             speed = 650
+        for enemy in enemy_list:
+            if enemy.blitz == True:
+                global enemy_speed
+                if abs(enemy.cooldown - time.perf_counter()) <= (1/4):
+                    enemy_speed = 1625
+                else:
+                    enemy.cooldown = time.perf_counter()
+                    enemy_speed = 400
+                    enemy.blitz = False
         for i in player.laser_list:
             for enemy in enemy_list:
                 if len(i.shapes_collide(enemy).points) > 0:
@@ -200,49 +210,64 @@ def refresh(dt):
     if dead == False and len(enemy_list) > 0 and started == True:
         for i in enemy_list:
             if len(player.shapes_collide(i).points) > 0 and player.blitz == True:
-                    i.health -= 50
-                    if i.health <= 0:
-                        space.remove(i)
-                        space.remove(i.body)
-                        enemy_list.remove(i)
-            i.shoot()
+                i.health -= 50
+                if i.health <= 0:
+                    space.remove(i)
+                    space.remove(i.body)
+                    enemy_list.remove(i)
+                player.blitz = False
+            if len(player.shapes_collide(i).points) > 0 and i.blitz == True:
+                player.health -= 50
+                if player.health <= 0:
+                    dead = True
+                    space.remove(player)
+                    space.remove(player.body)
+                i.blitz = False
+            if i.laser_type != "blitz":
+                i.shoot()
             body_x, body_y = i.body.position
             x, y = player.body.position
-            if abs(time.perf_counter() - i.time_since_variance) >= (0.15):
-                variance_num = random.uniform(-1 * math.pi/20, math.pi/20)    
-                global desired_angle
-                desired_angle = math.atan2(body_y - y, body_x - x) - (math.pi) + variance_num
-                i.time_since_variance = time.perf_counter()
-            rotation_angle = math.pi/16
-            if player.body.velocity == (0, 0):
-                i.body.angle = 0.0
-                desired_angle = i.body.angle + math.atan2(body_y - y, body_x - x) - (math.pi)
-                i.body.angle = desired_angle
-            elif abs(desired_angle - i.body.angle) < rotation_angle:
-                while i.body.angle >= 2 * math.pi:
-                    i.body.angle = i.body.angle / 2 * math.pi
-                while i.body.angle <= -2 * math.pi:
-                    i.body.angle = i.body.angle / -2 * math.pi
-                i.body.angle = desired_angle
-            elif desired_angle < 0:
-                i.body.angle -= rotation_angle
-                while i.body.angle <= -2 * math.pi:
-                    i.body.angle = i.body.angle / (-2 * math.pi)
-            elif desired_angle >= 0:
-                i.body.angle += rotation_angle
-                while i.body.angle >= 2 * math.pi:
-                    i.body.angle = i.body.angle / 2 * math.pi
-            else:
-                while i.body.angle >= 2 * math.pi:
-                    i.body.angle = i.body.angle / 2 * math.pi
-                while i.body.angle <= -2 * math.pi:
-                    i.body.angle = i.body.angle / -2 * math.pi
+            if i.blitz == False:
+                if abs(time.perf_counter() - i.time_since_variance) >= (0.15):
+                    variance_num = random.uniform(-1 * math.pi/20, math.pi/20)    
+                    global desired_angle
+                    desired_angle = math.atan2(body_y - y, body_x - x) - (math.pi) + variance_num
+                    i.time_since_variance = time.perf_counter()
+                rotation_angle = math.pi/16
+                if player.body.velocity == (0, 0):
+                    i.body.angle = 0.0
+                    desired_angle = i.body.angle + math.atan2(body_y - y, body_x - x) - (math.pi)
+                    i.body.angle = desired_angle
+                    i.shoot()
+                elif abs(desired_angle - i.body.angle) < rotation_angle:
+                    while i.body.angle >= 2 * math.pi:
+                        i.body.angle = i.body.angle / 2 * math.pi
+                    while i.body.angle <= -2 * math.pi:
+                        i.body.angle = i.body.angle / -2 * math.pi
+                    i.shoot()
+                    i.body.angle = desired_angle
+                elif desired_angle < 0:
+                    i.body.angle -= rotation_angle
+                    while i.body.angle <= -2 * math.pi:
+                        i.body.angle = i.body.angle / (-2 * math.pi)
+                elif desired_angle >= 0:
+                    i.body.angle += rotation_angle
+                    while i.body.angle >= 2 * math.pi:
+                        i.body.angle = i.body.angle / 2 * math.pi
+                else:
+                    while i.body.angle >= 2 * math.pi:
+                        i.body.angle = i.body.angle / 2 * math.pi
+                    while i.body.angle <= -2 * math.pi:
+                        i.body.angle = i.body.angle / -2 * math.pi
 
-            distance = math.sqrt((x - body_x) ** 2 + (y - body_y) ** 2)
-            if distance >= 200:
-                i.body.velocity = Vec2d(math.cos(i.body.angle), math.sin(i.body.angle)) * 400
+                distance = math.sqrt((x - body_x) ** 2 + (y - body_y) ** 2)
+                if i.blitz == False:
+                    if distance >= 200:
+                        i.body.velocity = Vec2d(math.cos(i.body.angle), math.sin(i.body.angle)) * enemy_speed
+                    else:
+                        i.body.velocity = 0, 0
             else:
-                i.body.velocity = 0, 0
+                i.body.velocity = Vec2d(math.cos(i.body.angle), math.sin(i.body.angle)) * enemy_speed
 
     if dead == False and started == True:
         for enemy in enemy_list:
