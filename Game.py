@@ -82,7 +82,7 @@ class Ship(pymunk.Poly):
                 self.blitz = True
                 
 
-player = Ship(GREEN, "default")
+player = Ship(GREEN, "blitz")
 enemy_list = []
 for i in range(1):
     enemy_list.append(Ship(RED, "default"))
@@ -199,6 +199,12 @@ def refresh(dt):
 
     if dead == False and len(enemy_list) > 0 and started == True:
         for i in enemy_list:
+            if len(player.shapes_collide(i).points) > 0 and player.blitz == True:
+                    i.health -= 50
+                    if i.health <= 0:
+                        space.remove(i)
+                        space.remove(i.body)
+                        enemy_list.remove(i)
             i.shoot()
             body_x, body_y = i.body.position
             x, y = player.body.position
@@ -250,12 +256,12 @@ def refresh(dt):
                     space.remove(enemy_laser)
                     space.remove(enemy_laser.body)
                     enemy.laser_list.remove(enemy_laser)
+        body_x, body_y = player.body.position
+        x, y = destination
         if player.blitz == False:
-            body_x, body_y = player.body.position
-            x, y = destination
             player.body.angle = 0.0
             player.body.angle = player.body.angle + math.atan2(body_y - y, body_x - x) - (math.pi)
-            distance = math.sqrt((x - body_x) ** 2 + (y - body_y) ** 2)
+        distance = math.sqrt((x - body_x) ** 2 + (y - body_y) ** 2)
         if distance >= 10 or player.blitz == True:
             if player.blitz == True:
                 global continue_forward
