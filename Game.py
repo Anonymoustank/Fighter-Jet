@@ -6,7 +6,6 @@ from pyglet.window import key, mouse
 import math
 import time
 import random
-import Load_Screen
 RED = (220,20,30)
 GREEN = (0,205,0)
 WHITE = (255, 255, 255)
@@ -94,6 +93,7 @@ for i in range(2):
 started = False
 dead = False
 has_won = False
+has_selected = False
 
 wall1_body = pymunk.Body(1, 100, pymunk.Body.KINEMATIC)
 wall1_body.position = WIDTH + 5, HEIGHT // 2
@@ -165,8 +165,33 @@ def on_draw():
             i.total_health = pyglet.shapes.Rectangle(i_x - 20, i_y - 75, i.health_bar_length * (i.health/100), 5, GREEN)
             i.total_health.draw()
     elif started == False:
-        label = pyglet.text.Label('Press Enter/Return to Start', font_name='Comic Sans', font_size=24, x=window.width/2, y=window.height/2, anchor_x='center', anchor_y='center')
-        label.draw()
+        if has_selected == False:
+            description_label = pyglet.text.Label('Select a class', font_name='Comic Sans', font_size=36, x=window.width/2, y=window.height * 0.8, anchor_x='center', anchor_y='center')
+            description_label.draw()
+            my_len = 22.5
+            default_option = pyglet.shapes.Rectangle(x = my_len, y=window.height/4, width=window.width/4.5 , height=window.height/4, color=WHITE)
+            default_option.opacity = 100
+            default_option.draw()
+            default_option_label = pyglet.text.Label('Default Shooter', font_name='Comic Sans', font_size=24, x=my_len + window.width/9, y=window.height/4 + window.height/8, anchor_x='center', anchor_y='center')
+            default_option_label.draw()
+            three_shooter_option = pyglet.shapes.Rectangle(x=window.width/4 + my_len, y=window.height/4, width=window.width/4.5, height=window.height/4, color=WHITE)
+            three_shooter_option.opacity = 100
+            three_shooter_option.draw()
+            three_shooter_option_label = pyglet.text.Label('Triple Shooter', font_name='Comic Sans', font_size=24, x=my_len + window.width/9 + window.width/4, y=window.height/4 + window.height/8, anchor_x='center', anchor_y='center')
+            three_shooter_option_label.draw()
+            blitz_option = pyglet.shapes.Rectangle(x=window.width/2 + my_len, y=window.height/4, width=window.width/4.5, height=window.height/4, color=WHITE)
+            blitz_option.opacity = 100
+            blitz_option.draw()
+            blitz_option_label = pyglet.text.Label('Blitz', font_name='Comic Sans', font_size=24, x=my_len + window.width/9 + window.width/2, y=window.height/4 + window.height/8, anchor_x='center', anchor_y='center')
+            blitz_option_label.draw()
+            sniper_option = pyglet.shapes.Rectangle(x=3 * window.width/4 + my_len, y=window.height/4, width=window.width/4.5, height=window.height/4, color=WHITE)
+            sniper_option.opacity = 100
+            sniper_option.draw()
+            sniper_option_label = pyglet.text.Label('Sniper', font_name='Comic Sans', font_size=24, x=my_len + window.width/9 + window.width/2 + window.width/4, y=window.height/4 + window.height/8, anchor_x='center', anchor_y='center')
+            sniper_option_label.draw()
+        else:
+            label = pyglet.text.Label('Press Enter/Return to Start', font_name='Comic Sans', font_size=24, x=window.width/2, y=window.height/2, anchor_x='center', anchor_y='center')
+            label.draw()
     elif dead == True:
         death_label = pyglet.text.Label('Game Over', font_name='Comic Sans', font_size=24, x=window.width/2, y=window.height/2, anchor_x='center', anchor_y='center')
         death_label.draw()
