@@ -85,8 +85,11 @@ class Ship(pymunk.Poly):
 player = Ship(GREEN, "sniper")
 
 enemy_list = []
+possible_classes = ["blitz", "three-shooter", "default", "sniper"]
 for i in range(2):
-    enemy_list.append(Ship(RED, "blitz"))
+    enemy_class = random.choice(possible_classes)
+    enemy_list.append(Ship(RED, enemy_class))
+    possible_classes.remove(enemy_class)
     space.add(enemy_list[len(enemy_list) - 1])
     space.add(enemy_list[len(enemy_list) - 1].body)
     enemy_list[len(enemy_list) - 1].body.position = -50, HEIGHT // (2 * (i + 1))
@@ -122,17 +125,12 @@ is_held_down = False
 enemy_speed = 400
 
 @window.event
-def on_mouse_press(x, y, button, modifiers):
-    global started
-    started = True
-
-@window.event
 def on_key_press(symbol, modifiers):
-    if symbol == key.SPACE:
+    global started
+    if symbol == key.SPACE and started == True:
         global is_held_down
         is_held_down = True
     if symbol == key.ENTER:
-        global started
         started = True
 
 @window.event
@@ -166,6 +164,7 @@ def on_draw():
             i.total_health.draw()
     elif started == False:
         if has_selected == False:
+            global default_option, three_shooter_option, blitz_option, sniper_option
             description_label = pyglet.text.Label('Select a class', font_name='Comic Sans', font_size=36, x=window.width/2, y=window.height * 0.8, anchor_x='center', anchor_y='center')
             description_label.draw()
             my_len = 22.5
@@ -195,6 +194,23 @@ def on_draw():
     elif dead == True:
         death_label = pyglet.text.Label('Game Over', font_name='Comic Sans', font_size=24, x=window.width/2, y=window.height/2, anchor_x='center', anchor_y='center')
         death_label.draw()
+
+@window.event
+def on_mouse_press(x, y, button, modifiers):
+    global has_selected, player
+    if has_selected == False:
+        for i in [sniper_option, blitz_option, default_option, three_shooter_option]:
+            button_x, button_y = i.position
+            if abs(button_x - x) <= i.width and abs(button_y - y) <= i.height:
+                has_selected = True
+                if i == sniper_option:
+                    player.laser_type = "sniper"
+                elif i == blitz_option:
+                    player.laser_type = "blitz"
+                elif i == default_option:
+                    player.laser_type = "default"
+                elif i == three_shooter_option:
+                    player.laser_type = "three-shooter"
 
 def refresh(dt):
     global dead, has_won
